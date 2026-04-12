@@ -3,35 +3,26 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"gov-parser/internal/crawler"
 	"gov-parser/internal/fmc"
 	"log"
-	"net/http"
 )
 
 func main() {
-	targetUrl := "https://fms.ecc.kz/ru/announce/index/518384"
-
-	resp, err := http.Get(targetUrl)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Status code is not 200")
-		log.Fatalf("Status code is not 200")
-	}
+	targetUrl := "https://fms.ecc.kz/ru/searchanno"
 
 	parser := fmc.NewParser()
+	scraper := crawler.NewScraper(parser)
 
-	lots, err := parser.Parse(resp.Body)
+	alltenders, err := scraper.Run(targetUrl)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("Ошибка запуска скрейпера: %v", err)
 	}
 
-	prettyJson, err := json.MarshalIndent(lots, "", "  ")
+	// 6. Красивый вывод
+	prettyJson, err := json.MarshalIndent(alltenders, "", "  ")
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("Ошибка сборки JSON: %v", err)
 	}
 
 	fmt.Println(string(prettyJson))
